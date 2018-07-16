@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
 
+const axios = require('axios');
+const cheerio = require('cheerio');
 const mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost/scraping-service');
@@ -18,23 +20,75 @@ app.get('/subscribe', (req, res) => {
     })
 });
 
-function doWebScrapping (){
+app.get('/exec', (req, res) => {
+  doWebScrapping();
+})
+
+function doWebScrapping() {
   const promises = [];
   promises.push(USERS.find());
   promises.push(scrapMarca());
-  promises.push(scrapSport());
-  promises.push(scrapAs());
+  // promises.push(scrapSport());
+  // promises.push(scrapAs());
+
+  Promise.all(promises)
+    .then(([users, news1]) => {
+      const news = [...news1];
+
+      users.forEach(user => {
+        let newsFiltered = [];
+        newsFiltered = news.filter(notice => notice.title.toLowerCase().includes(user.query.toLowerCase()));
+        console.log(newsFiltered);
+        sendEmail(user.email, newsFiltered);
+      });
+
+    })
 
 }
 
-function scrapMarca(){
-  
+function sendEmail(email, news) {
+  console.log(`Le envío un correo al usuario ${email} con ${news.length} noticias`);
 }
-function scrapSport(){
-  
+
+
+function scrapMarca() {
+  return axios.get('http://www.marca.com/futbol.html?intcmp=MENUPROD&s_kw=futbol')
+    .then(response => {
+      const news = [];
+      const $ = cheerio.load(response.data);
+      const titles = $('article h2 a');
+      titles.each((title, element) => {
+        const titleElement = $(element);
+        news.push({ title: titleElement.text() });
+      })
+      return news;
+    })
 }
-function scrapAs(){
-  
+function scrapSport() {
+  return axios.get('http://www.marca.com/futbol.html?intcmp=MENUPROD&s_kw=futbol')
+    .then(response => {
+      const news = [];
+      const $ = cheerio.load(response.data);
+      const titles = $('article h2 a');
+      titles.each((title, element) => {
+        const titleElement = $(element);
+        news.push(titleElement.text());
+      })
+      return news;
+    })
+}
+function scrapAs() {
+  return axios.get('http://www.marca.com/futbol.html?intcmp=MENUPROD&s_kw=futbol')
+    .then(response => {
+      const news = [];
+      const $ = cheerio.load(response.data);
+      const titles = $('article h2 a');
+      titles.each((title, element) => {
+        const titleElement = $(element);
+        news.push(titleElement.text());
+      })
+      return news;
+    })
 }
 
 
