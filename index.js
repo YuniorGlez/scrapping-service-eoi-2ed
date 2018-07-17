@@ -6,10 +6,7 @@ const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/scraping-service');
 const app = express();
 
-
-
 const USERS = mongoose.model('user', new mongoose.Schema({ email: String, query: String, newspapers: String }))
-
 
 app.get('/subscribe', (req, res) => {
   const { newspapers, email, query } = req.query;
@@ -21,8 +18,6 @@ app.get('/subscribe', (req, res) => {
       res.send('Hubo algún error');
     })
 });
-
-
 
 app.get('/exec', (req, res) => {
   doWebScrapping()
@@ -53,7 +48,6 @@ function doWebScrapping() {
     .catch(err => {
       console.error(err);
     })
-
 }
 
 function sendEmail(email, news) {
